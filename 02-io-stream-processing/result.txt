@@ -1,0 +1,2 @@
+Even Sum : 270
+Odd Sum : 510
