@@ -73,7 +73,7 @@ func printShapeStats(x interface {
 	Area() float32
 	Perimeter() float32
 }) {
-	printArea(x)      // x has to be interface{ Area() float32 }
+	printArea(x)      // x has to be interface { Area() float32 }
 	printPerimeter(x) // x has to interface { Perimeter() float32 }
 }
 */
