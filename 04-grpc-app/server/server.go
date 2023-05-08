@@ -17,7 +17,7 @@ type appService struct {
 func (asi *appService) Add(ctx context.Context, req *proto.AddRequest) (*proto.AddResponse, error) {
 	x := req.GetX()
 	y := req.GetY()
-	fmt.Println("[appService.add() processing %d and %d\n", x, y)
+	fmt.Printf("[appService.add()] processing %d and %d\n", x, y)
 
 	result := x + y
 	res := &proto.AddResponse{
