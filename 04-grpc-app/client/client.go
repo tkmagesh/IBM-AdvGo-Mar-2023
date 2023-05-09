@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"time"
 
@@ -22,6 +23,12 @@ func main() {
 	appServiceClient := proto.NewAppServiceClient(clientConn)
 
 	ctx := context.Background()
+	// doRequestResponse(ctx, appServiceClient)
+	doServerStreaming(ctx, appServiceClient)
+
+}
+
+func doRequestResponse(ctx context.Context, appServiceClient proto.AppServiceClient) {
 	timeoutCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
@@ -39,5 +46,26 @@ func main() {
 		log.Fatalln(err)
 	}
 	fmt.Printf("Result = %d\n", res.GetResult())
+}
 
+func doServerStreaming(ctx context.Context, appServiceClient proto.AppServiceClient) {
+	req := &proto.PrimeRequest{
+		Start: 3,
+		End:   100,
+	}
+	clientStream, err := appServiceClient.GeneratePrimes(ctx, req)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	for {
+		primeRes, err := clientStream.Recv()
+		if err == io.EOF {
+			log.Println("All prime number received")
+			break
+		}
+		if err != nil {
+			log.Fatalln(err)
+		}
+		log.Printf("Prime No : %d\n", primeRes.GetPrimeNo())
+	}
 }
