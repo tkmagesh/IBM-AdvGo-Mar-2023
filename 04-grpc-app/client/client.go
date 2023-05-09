@@ -109,6 +109,16 @@ func doBidirectionalStreaming(ctx context.Context, appServiceClient proto.AppSer
 	if err != nil {
 		log.Fatalln(err)
 	}
+	done := make(chan struct{})
+	go func() {
+		for {
+			greetRes, err := clientStream.Recv()
+			if err != nil {
+				log.Fatalln(err)
+			}
+			log.Printf("Received : %q\n", greetRes.GetMessage())
+		}
+	}()
 	for _, person := range persons {
 		greetReq := &proto.GreetRequest{
 			Person: person,
@@ -117,11 +127,6 @@ func doBidirectionalStreaming(ctx context.Context, appServiceClient proto.AppSer
 		log.Printf("Sending : %+v\n", person)
 		clientStream.Send(greetReq)
 	}
-	for {
-		greetRes, err := clientStream.Recv()
-		if err != nil {
-			log.Fatalln(err)
-		}
-		log.Printf("Received : %q\n", greetRes.GetMessage())
-	}
+
+	<-done
 }
