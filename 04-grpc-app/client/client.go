@@ -25,7 +25,8 @@ func main() {
 	ctx := context.Background()
 	// doRequestResponse(ctx, appServiceClient)
 	// doServerStreaming(ctx, appServiceClient)
-	doClientStreaming(ctx, appServiceClient)
+	// doClientStreaming(ctx, appServiceClient)
+	doBidirectionalStreaming(ctx, appServiceClient)
 
 }
 
@@ -93,4 +94,34 @@ func doClientStreaming(ctx context.Context, appServiceClient proto.AppServiceCli
 		log.Fatalln(err)
 	}
 	log.Printf("Average Response, count = %d & average = %d\n", res.GetCount(), res.GetAverage())
+}
+
+// modify the below function in such a way that the "receive" operation is independent of the "send" operation
+func doBidirectionalStreaming(ctx context.Context, appServiceClient proto.AppServiceClient) {
+	persons := []*proto.PersonName{
+		{FirstName: "Magesh", LastName: "Kuppan"},
+		{FirstName: "Suresh", LastName: "Kannan"},
+		{FirstName: "Ramesh", LastName: "Jayaraman"},
+		{FirstName: "Rajesh", LastName: "Pandit"},
+		{FirstName: "Ganesh", LastName: "Kumar"},
+	}
+	clientStream, err := appServiceClient.Greet(ctx)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	for _, person := range persons {
+		greetReq := &proto.GreetRequest{
+			Person: person,
+		}
+		time.Sleep(3 * time.Second)
+		log.Printf("Sending : %+v\n", person)
+		clientStream.Send(greetReq)
+	}
+	for {
+		greetRes, err := clientStream.Recv()
+		if err != nil {
+			log.Fatalln(err)
+		}
+		log.Printf("Received : %q\n", greetRes.GetMessage())
+	}
 }

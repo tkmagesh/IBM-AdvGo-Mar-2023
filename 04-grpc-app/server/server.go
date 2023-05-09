@@ -94,6 +94,29 @@ func isPrime(no int32) bool {
 	return true
 }
 
+func (asi *appService) Greet(serverStream proto.AppService_GreetServer) error {
+	for {
+		greetReq, err := serverStream.Recv()
+		if err != nil {
+			log.Fatalln(err)
+		}
+		person := greetReq.GetPerson()
+		firstName := person.GetFirstName()
+		lastName := person.GetLastName()
+		log.Printf("Received greet request for %q and %q\n", firstName, lastName)
+		message := fmt.Sprintf("Hi %s %s, Have a nice day!", firstName, lastName)
+		time.Sleep(1 * time.Second)
+		log.Printf("Sending response : %q\n", message)
+		greetResp := &proto.GreetResponse{
+			Message: message,
+		}
+		if err := serverStream.Send(greetResp); err != nil {
+			log.Fatalln(err)
+		}
+	}
+	return nil
+}
+
 func main() {
 	asi := &appService{}
 	listener, err := net.Listen("tcp", ":50051")
