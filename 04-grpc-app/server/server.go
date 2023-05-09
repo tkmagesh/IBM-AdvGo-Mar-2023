@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net"
+	"time"
 
 	"github.com/tkmagesh/ibm-advgo-mar-2023/04-grpc-app/proto"
 	"google.golang.org/grpc"
@@ -19,11 +21,20 @@ func (asi *appService) Add(ctx context.Context, req *proto.AddRequest) (*proto.A
 	y := req.GetY()
 	fmt.Printf("[appService.add()] processing %d and %d\n", x, y)
 
-	result := x + y
-	res := &proto.AddResponse{
-		Result: result,
+	time.Sleep(5 * time.Second) // forcing the timeout signal to be triggerd from the client
+	select {
+	case <-ctx.Done():
+		log.Println("timeout occurred")
+		return nil, errors.New("timeout occurred")
+	default:
+		result := x + y
+		res := &proto.AddResponse{
+			Result: result,
+		}
+		log.Println("sending response")
+		return res, nil
 	}
-	return res, nil
+
 }
 
 func main() {
