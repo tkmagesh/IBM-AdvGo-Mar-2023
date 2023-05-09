@@ -24,7 +24,8 @@ func main() {
 
 	ctx := context.Background()
 	// doRequestResponse(ctx, appServiceClient)
-	doServerStreaming(ctx, appServiceClient)
+	// doServerStreaming(ctx, appServiceClient)
+	doClientStreaming(ctx, appServiceClient)
 
 }
 
@@ -68,4 +69,28 @@ func doServerStreaming(ctx context.Context, appServiceClient proto.AppServiceCli
 		}
 		log.Printf("Prime No : %d\n", primeRes.GetPrimeNo())
 	}
+}
+
+func doClientStreaming(ctx context.Context, appServiceClient proto.AppServiceClient) {
+	nos := []int32{3, 1, 4, 2, 5, 8, 6, 9, 7}
+	clientStream, err := appServiceClient.CalculateAverage(ctx)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	for _, no := range nos {
+		req := &proto.AverageRequest{
+			No: no,
+		}
+		log.Printf("Sending no : %d\n", no)
+		clientStream.Send(req)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		time.Sleep(500 * time.Millisecond)
+	}
+	res, err := clientStream.CloseAndRecv()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.Printf("Average Response, count = %d & average = %d\n", res.GetCount(), res.GetAverage())
 }

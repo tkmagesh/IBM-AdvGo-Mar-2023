@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"time"
@@ -54,6 +55,34 @@ func (asi *appService) GeneratePrimes(req *proto.PrimeRequest, serverStream prot
 	log.Println("All the prime numbers are generated")
 	return nil
 
+}
+
+func (asi *appService) CalculateAverage(serverStream proto.AppService_CalculateAverageServer) error {
+	var count, sum int32
+	for {
+		req, err := serverStream.Recv()
+		if err == io.EOF {
+			log.Println("Received all the values")
+			break
+		}
+		if err != nil {
+			log.Fatalln(err)
+		}
+		log.Printf("Received value : %d\n", req.GetNo())
+		count++
+		sum += req.GetNo()
+	}
+
+	avg := sum / count
+	res := &proto.AverageResponse{
+		Count:   count,
+		Average: avg,
+	}
+	log.Println("Sending the average result")
+	if err := serverStream.SendAndClose(res); err != nil {
+		log.Fatalln(err)
+	}
+	return nil
 }
 
 func isPrime(no int32) bool {
