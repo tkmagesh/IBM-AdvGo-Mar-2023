@@ -39,7 +39,15 @@ func (products Products) filter(predicate func(Product) bool) Products {
 }
 
 /* Write a generic filter "function" (not a method) that can be used to filter a collection of any type*/
-
+func Filter[T comparable](list []T, predicate func(T) bool) []T {
+	var result []T
+	for _, item := range list {
+		if predicate(item) {
+			result = append(result, item)
+		}
+	}
+	return result
+}
 func main() {
 	products := Products{
 		Product{105, "Pen", 5, 50, "Stationary"},
@@ -53,13 +61,23 @@ func main() {
 	fmt.Println("Initial List")
 	fmt.Println(products)
 
-	var stationaryProducts = products.filter(func(p Product) bool {
+	/*
+		var stationaryProducts = products.filter(func(p Product) bool {
+			return p.Category == "Stationary"
+		})
+	*/
+	var stationaryProducts = Filter(products, func(p Product) bool {
 		return p.Category == "Stationary"
 	})
+
 	fmt.Println("Stationary Products")
 	fmt.Println(stationaryProducts)
 
 	nos := []int{3, 1, 4, 2, 5}
-	floats := []float32{4.5, 1.7, 4.8, 2.3, 5.4}
+	var evenNos = Filter(nos, func(no int) bool {
+		return no%2 == 0
+	})
+	fmt.Println(evenNos)
+	// floats := []float32{4.5, 1.7, 4.8, 2.3, 5.4}
 
 }
