@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App</title>
+    <script>
+        (function(){
+            var ws, txtMessage, btnSend, divMessages
+            
+            function onMessageFromServer(evtArg){
+                var msg = evtArg.data
+                divMessages.innerHTML += msg + '<br/>'
+            }
+
+            function onBtnSendClick(){
+                var msg = txtMessage.value
+                ws.send(msg)
+            }
+
+            function onDocumentLoad(){
+                ws = new WebSocket('ws://localhost:8080/chat')
+                txtMessage = document.getElementById('txtMessage');
+                divMessages = document.getElementById('divMessages');
+                btnSend = document.getElementById('btnSend')
+
+                btnSend.addEventListener('click', onBtnSendClick)
+                ws.addEventListener('message', onMessageFromServer)
+            }
+            window.addEventListener('load', onDocumentLoad)
+        })()
+    </script>
+</head>
+<body>
+    <h1>Chat</h1>
+    <label for="">Message :</label>
+    <input type="text" name="" id="txtMessage">
+    <button id="btnSend">Send</button>
+    <div id="divMessages"></div>
+</body>
+</html>
