@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
+	"time"
 
 	"mux-server/controllers"
 
@@ -19,9 +21,28 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "Hello World!")
 }
 
+func logMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("%s - %s\n", r.Method, r.URL.Path)
+		next.ServeHTTP(w, r)
+	})
+}
+
+func profileMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		next.ServeHTTP(w, r)
+		elapsed := time.Since(start)
+		log.Println(elapsed)
+	})
+}
+
 func main() {
 
 	srv := mux.NewRouter()
+	srv.Use(profileMiddleware)
+	srv.Use(logMiddleware)
+
 	srv.HandleFunc("/", indexHandler)
 	srv.HandleFunc("/customers", customersHandler)
 

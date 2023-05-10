@@ -75,3 +75,13 @@ Application Setup
 To generate proxy & stub, run the following command from the application root folder (folder that has the go.mod file)
 
 protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative proto/service.proto
+
+http services
+    - Using ONLY the standard library (net/http package)
+    - Using the routing library (mux, httprouter etc)
+    - Using web framework (Gin etc)
+
+Database operations
+    - Using ONLY the standard library (database/sql)
+    - Using Query Builders (squirrel, sqlc etc)
+    - Using ORM (GORM etc)
