@@ -27,9 +27,25 @@ func (server *appServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Printf("%s - %s\n", r.Method, r.URL.Path)
 	switch r.URL.Path {
 	case "/products":
-		if err := json.NewEncoder(w).Encode(products); err != nil {
-			http.Error(w, "internal server error", http.StatusInternalServerError)
+		switch r.Method {
+		case http.MethodGet:
+			if err := json.NewEncoder(w).Encode(products); err != nil {
+				http.Error(w, "internal server error", http.StatusInternalServerError)
+			}
+		case http.MethodPost:
+			var newProduct Product
+			if err := json.NewDecoder(r.Body).Decode(&newProduct); err != nil {
+				http.Error(w, "invalid request", http.StatusBadRequest)
+			}
+			newProduct.Id = len(products) + 101
+			products = append(products, newProduct)
+			if err := json.NewEncoder(w).Encode(newProduct); err != nil {
+				http.Error(w, "internal server error", http.StatusInternalServerError)
+			}
+		default:
+			http.Error(w, "method not supported", http.StatusMethodNotAllowed)
 		}
+
 	case "/customers":
 		fmt.Fprintln(w, "All the customers details will be served")
 	case "/":
