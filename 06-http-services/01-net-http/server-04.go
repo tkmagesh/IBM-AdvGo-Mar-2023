@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 )
 
 // application specific handlers
@@ -22,7 +23,6 @@ var products = []Product{
 }
 
 func productsHandler(w http.ResponseWriter, r *http.Request) {
-	log.Printf("%s - %s\n", r.Method, r.URL.Path)
 	switch r.Method {
 	case http.MethodGet:
 		if err := json.NewEncoder(w).Encode(products); err != nil {
@@ -44,13 +44,38 @@ func productsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func customersHandler(w http.ResponseWriter, r *http.Request) {
-	log.Printf("%s - %s\n", r.Method, r.URL.Path)
 	fmt.Fprintln(w, "All the customers details will be served")
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
-	log.Printf("%s - %s\n", r.Method, r.URL.Path)
 	fmt.Fprintln(w, "Hello World!")
+}
+
+//middlewares
+func logMiddleware(handler http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("%s - %s\n", r.Method, r.URL.Path)
+		handler(w, r)
+	}
+}
+
+func profileMiddleware(handler http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		handler(w, r)
+		elapsed := time.Since(start)
+		log.Println(elapsed)
+	}
+}
+
+//utility function for assembling middlewares
+type Middleware func(http.HandlerFunc) http.HandlerFunc
+
+func chain(handler http.HandlerFunc, middlewares ...Middleware) http.HandlerFunc {
+	for _, middleware := range middlewares {
+		handler = middleware(handler)
+	}
+	return handler
 }
 
 func main() {
@@ -61,10 +86,19 @@ func main() {
 		srv.HandleFunc("/customers", customersHandler)
 		srv.HandleFunc("/products", productsHandler)
 	*/
+	/*
+		indexWithLogHandler := logMiddleware(indexHandler)
+		http.HandleFunc("/", indexWithLogHandler)
+	*/
 
-	http.HandleFunc("/", indexHandler)
-	http.HandleFunc("/customers", customersHandler)
-	http.HandleFunc("/products", productsHandler)
+	/*
+		http.HandleFunc("/", profileMiddleware(logMiddleware(indexHandler)))
+		http.HandleFunc("/customers", profileMiddleware(logMiddleware(customersHandler)))
+		http.HandleFunc("/products", profileMiddleware(logMiddleware(productsHandler)))
+	*/
+	http.HandleFunc("/", chain(indexHandler, logMiddleware, profileMiddleware))
+	http.HandleFunc("/customers", chain(customersHandler, logMiddleware, profileMiddleware))
+	http.HandleFunc("/products", chain(productsHandler, logMiddleware, profileMiddleware))
 
 	http.ListenAndServe(":8080", nil)
 }
